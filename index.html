@@ -28,7 +28,7 @@ h1{font-size:22px;margin:0 0 4px}
 .note{color:var(--muted);font-size:12.5px;margin-top:10px}
 label{display:block;font-size:12.5px;color:var(--muted);margin-bottom:3px}
 input,select,button{font:inherit;color:var(--ink)}
-input[type=number],select{width:100%;padding:7px 9px;background:var(--bg);border:1px solid var(--line);border-radius:6px}
+input[type=number],input[type=text],select{width:100%;padding:7px 9px;background:var(--bg);border:1px solid var(--line);border-radius:6px}
 input:focus-visible,select:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
 .f{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;align-items:end}
 button{cursor:pointer;background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:7px 12px}
@@ -61,6 +61,34 @@ button:hover{border-color:var(--accent)}
 .tag{font-size:12px;color:var(--muted)}
 .spinfo{font-size:13px;color:var(--muted);margin-top:8px}
 .gx{margin:0 0 10px;font-size:13.5px}
+.pr{border:1px solid var(--line);border-radius:8px;padding:10px;margin-bottom:8px}
+.pr.cur{border-color:var(--accent)}
+.pn{display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}
+.pid{font:12.5px ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--muted);letter-spacing:.06em}
+.tagc{font-size:11.5px;background:var(--accent);color:var(--accent-ink);border-radius:999px;padding:1px 8px}
+.ps{font-size:13px;color:var(--muted);margin:2px 0 8px}
+.pb{display:flex;flex-wrap:wrap;gap:6px}
+.pb button{padding:4px 10px;font-size:13px}
+.cmpl{display:inline-flex;align-items:center;gap:4px;font-size:13px;color:var(--ink);margin:0 6px 0 0}
+.bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.bar .pri{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);font-weight:500}
+.modal[hidden]{display:none}
+.modal{position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;padding:calc(env(safe-area-inset-top,0px) + 12px) 12px calc(env(safe-area-inset-bottom,0px) + 12px)}
+.mbg{position:absolute;inset:0;background:rgba(0,0,0,.55)}
+.mbox{position:relative;background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:12px;width:100%;max-width:860px;max-height:100%;overflow:auto;padding:18px}
+.mhead{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.mhead h2{margin:0;font-size:17px}
+.mbox h3{font-size:14.5px;margin:18px 0 6px}
+.mdet{margin-top:14px;border:1px solid var(--line);border-radius:8px;padding:8px 12px}
+.mdet summary{cursor:pointer;font-size:13.5px}
+.cmps{overflow-x:auto}
+.cmp{border-collapse:collapse;width:100%;min-width:460px;font-size:13.5px}
+.cmp th,.cmp td{border-bottom:1px solid var(--line);padding:6px 8px;text-align:right;vertical-align:top;font-variant-numeric:tabular-nums}
+.cmp th:first-child,.cmp td:first-child{text-align:left;position:sticky;left:0;background:var(--surface)}
+.cmp td.best{font-weight:700}
+.cmp .dl{display:block;font-size:12px;color:var(--muted);font-weight:400}
+.cmp .rb{display:block;font-size:12px;color:var(--muted);font-weight:400;margin:2px 0 0}
+.chk{display:flex;align-items:center;gap:6px;font-size:14px;color:var(--ink);margin:6px 0}
 .row.sk{grid-template-columns:minmax(0,1fr) 70px 100px auto}
 @media (max-width:640px){.row.sk{grid-template-columns:1fr 70px}.row.sk .vwrap{grid-column:1 / 2}}
 </style>
@@ -121,10 +149,11 @@ button:hover{border-color:var(--accent)}
     </div>
     <p class="note">게임 1.0 밸런스 데이터 기준 기본값이에요.</p>
   </div>
-  <button id="reset">전부 초기화</button>
+  <div class="bar"><button id="openP" class="pri">세팅 저장/불러오기</button><button id="reset">전부 초기화</button></div>
 </div>
 
 <aside class="panel result" aria-live="polite">
+  <div class="note" id="rCur" style="margin:0 0 6px"></div>
   <div class="bigl" id="rDpsL">깡 DPS</div>
   <div class="big" id="rDps">0</div>
   <div class="note" id="rDpsD" style="margin-top:4px"></div>
@@ -151,6 +180,32 @@ button:hover{border-color:var(--accent)}
   <p class="note">1회 데미지 = (기본 + 기본의 N% 속성 피해) × (1 + 능력치 5%×포인트) × (1 + 공격 데미지 %) × 양손 1.5 이고, DPS는 기본 공격 1회 기대 데미지 ÷ 공격 간격에 보석의 평균 발동 피해(재사용 대기시간·지속시간·갱신 반영)를 더한 값이고, DPM은 DPS × 60이에요. 지팡이는 주문 위력 × 지능 배율 × (1 + 피해량 %)를 충전 시간으로 나눠요. 지속 시간이 있는 주문은 위력을 지속 시간 전체의 피해로 보고 (충전 + 지속) 사이클로 나눠요. 적 방어력은 제외했고, 위력의 정확한 의미와 마법 치명타 기본값은 확인되지 않은 가정이에요.</p>
 </aside>
 </div>
+</div>
+
+<div class="modal" id="modal" hidden>
+ <div class="mbg" data-close="1"></div>
+ <div class="mbox" role="dialog" aria-modal="true" aria-labelledby="mtitle" tabindex="-1">
+  <div class="mhead"><h2 id="mtitle">세팅 저장 / 불러오기</h2><button id="mclose">닫기</button></div>
+  <div class="f" style="grid-template-columns:minmax(0,1fr) auto">
+   <div><label for="pname">저장명</label><input id="pname" type="text" maxlength="30" placeholder="예: 근접무기세팅"></div>
+   <button id="psave">현재 세팅 새로 저장</button>
+  </div>
+  <h3>저장된 세팅</h3>
+  <div id="plist"></div>
+  <h3>세팅 결과 비교</h3>
+  <label class="chk"><input type="checkbox" id="cmpCur"> 현재 화면(저장 전)도 비교에 포함</label>
+  <div class="note" id="cmpHint" style="margin:0 0 8px"></div>
+  <div class="cmps" id="cmpOut"></div>
+  <details class="mdet" id="shDet"><summary>공유 코드로 주고받기 (선택)</summary>
+   <div class="f" style="grid-template-columns:minmax(0,1fr) auto;margin-top:10px">
+    <div><label for="impIn">공유 코드 또는 세팅 ID로 불러오기</label><input id="impIn" type="text" placeholder="ENS1.… 또는 ABCDE12345"></div>
+    <button id="pimp">불러오기</button>
+   </div>
+   <div id="shareBox" style="display:none;margin-top:10px"><label for="shareOut">공유 코드</label><input id="shareOut" type="text" readonly></div>
+  </details>
+  <div class="note" id="pmsg" aria-live="polite"></div>
+  <p class="note">세팅 목록은 이 브라우저에만 저장돼요. ID는 내 목록 안에서 세팅을 구분하는 이름표예요.</p>
+ </div>
 </div>
 
 <script>
@@ -223,7 +278,7 @@ var GM={bleeding:{m:'crit'},burning:{m:'hit'},corruption:{m:'hit',stk:1},current
 var GCD={burning:[2],'storms-eye':[2],corruption:[1]};
 GEMS.forEach(function(g){g[4]=Object.assign({},g[4]||{},GM[g[0]]||{});(GCD[g[0]]||[]).forEach(function(i){g[3][i]=['cd','초']})});
 var KEY='enshrouded-calc-v2',uid=1;
-function def(){return {i:100,cat:'sword1',stat:'str',pts:0,cc:10,cd:80,rows:[],gem:'',gv:{},bowSpd:0.6,spell:'bf4',skills:[],gx:{},baseEl:'cut'}}
+function def(){return {i:100,cat:'sword1',stat:'str',pts:0,cc:10,cd:80,rows:[],gem:'',gv:{},bowSpd:0.6,spell:'bf4',skills:[],gx:{},baseEl:'cut',cur:''}}
 var S=def();
 function $(id){return document.getElementById(id)}
 function load(){try{var t=localStorage.getItem(KEY);if(t){var o=JSON.parse(t);if(o&&o.rows&&o.cat)S=Object.assign(def(),o)}}catch(e){}}
@@ -381,6 +436,7 @@ function renderSkills(){
 }
 function update(){
  var f=calc(),c=cat(),g=gem(),gc=f.gem,st=f.st,sp=f.sp;
+ var cpp=S.cur&&PL.filter(function(x){return x.id===S.cur})[0];$('rCur').textContent=cpp?'세팅: '+cpp.name+' ('+cpp.id+')':'';
  $('baseBox').style.display=st?'none':'';
  $('elBox').style.display=st?'none':'';
  $('spellBox').style.display=st?'':'none';
@@ -440,6 +496,124 @@ function syncInputs(){
  $('cat').value=S.cat;$('intr').value=S.i;$('stat').value=S.stat;$('pts').value=S.pts;$('cc').value=S.cc;$('cd').value=S.cd;
  $('bowSpd').value=S.bowSpd;$('spell').value=S.spell;$('baseEl').value=S.baseEl;
 }
+var PKEY='enshrouded-presets-v1',PL=[],delId='',cmpSel=[],cmpBase='',lastFocus=null;
+var AL='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+function loadPL(){try{var t=localStorage.getItem(PKEY);PL=t?JSON.parse(t):[];if(!Array.isArray(PL))PL=[]}catch(e){PL=[]}}
+function savePL(){try{localStorage.setItem(PKEY,JSON.stringify(PL))}catch(e){setMsg('브라우저가 저장을 막고 있어서 목록이 유지되지 않을 수 있어요.')}}
+function setMsg(t){$('pmsg').textContent=t}
+function esc(t){return String(t).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
+function newId(){
+ for(;;){
+  var a=new Uint8Array(10),id='',i;
+  if(typeof crypto!=='undefined'&&crypto.getRandomValues)crypto.getRandomValues(a);else for(i=0;i<10;i++)a[i]=Math.floor(Math.random()*256);
+  for(i=0;i<10;i++)id+=AL.charAt(a[i]%32);
+  if(!PL.some(function(p){return p.id===id}))return id;
+ }
+}
+function snap(){var o=JSON.parse(JSON.stringify(S));delete o.cur;return o}
+function clean(o){
+ o=o||{};var n=def();
+ n.cat=CATS.some(function(c){return c[0]===o.cat})?o.cat:n.cat;
+ n.i=+o.i||0;n.stat=['none','str','dex','int'].indexOf(o.stat)>=0?o.stat:n.stat;n.pts=+o.pts||0;
+ n.cc=o.cc===undefined?10:(+o.cc||0);n.cd=o.cd===undefined?80:(+o.cd||0);
+ n.bowSpd=+o.bowSpd===1?1:0.6;n.spell=SP.some(function(x){return x.id===o.spell})?o.spell:'bf4';
+ n.baseEl=['cut','blunt','pierce','none'].indexOf(o.baseEl)>=0?o.baseEl:BEL[n.cat];
+ n.rows=(o.rows||[]).filter(function(r){return r&&en(r.e)}).map(function(r){return {id:uid++,e:r.e,v:+r.v||0}});
+ n.skills=(o.skills||[]).filter(function(r){return r&&skill(r.sk)}).map(function(r){return {id:uid++,sk:r.sk,lv:Math.max(1,Math.min(skill(r.sk)[4],+r.lv||1)),v:+r.v||0}});
+ n.gem=GEMS.some(function(g){return g[0]===o.gem})?o.gem:'';
+ GEMS.forEach(function(g){
+  var a=o.gv&&o.gv[g[0]];if(Array.isArray(a))n.gv[g[0]]=a.map(function(x){return +x||0});
+  var x=o.gx&&o.gx[g[0]];
+  if(x&&typeof x==='object'){var y={};if(x.p!==undefined&&x.p!=='')y.p=+x.p||0;if(x.i!==undefined&&x.i!=='')y.i=+x.i||0;n.gx[g[0]]=y}
+ });
+ return n;
+}
+function applyState(n,cur){
+ S=n;S.cur=cur||'';
+ S.rows=S.rows.filter(function(r){return inScope(en(r.e))});
+ S.skills=S.skills.filter(function(r){return skScope(skill(r.sk))});
+ syncInputs();renderGemList();renderTip();renderRows();renderPresets();
+}
+function pack(s){return [1,s.cat,s.i,s.stat,s.pts,s.cc,s.cd,s.bowSpd,s.spell,s.baseEl,
+ (s.rows||[]).map(function(r){return [r.e,r.v]}),(s.skills||[]).map(function(r){return [r.sk,r.lv,r.v]}),
+ s.gem||'',(s.gv&&s.gv[s.gem])||[],(s.gx&&s.gx[s.gem])||{}]}
+function unpack(a){
+ if(!Array.isArray(a)||a[0]!==1)throw new Error('v');
+ var o={cat:a[1],i:a[2],stat:a[3],pts:a[4],cc:a[5],cd:a[6],bowSpd:a[7],spell:a[8],baseEl:a[9],
+  rows:(a[10]||[]).map(function(r){return {e:r[0],v:r[1]}}),skills:(a[11]||[]).map(function(r){return {sk:r[0],lv:r[1],v:r[2]}}),gem:a[12],gv:{},gx:{}};
+ if(a[12]){o.gv[a[12]]=a[13];o.gx[a[12]]=a[14]}
+ return o;
+}
+function b64u(b){var t='';for(var i=0;i<b.length;i++)t+=String.fromCharCode(b[i]);return btoa(t).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'')}
+function unb64u(t){t=t.replace(/-/g,'+').replace(/_/g,'/');while(t.length%4)t+='=';var x=atob(t),b=new Uint8Array(x.length);for(var i=0;i<x.length;i++)b[i]=x.charCodeAt(i);return b}
+function pipe(bytes,Ctor){return new Response(new Blob([bytes]).stream().pipeThrough(new Ctor('deflate-raw'))).arrayBuffer().then(function(b){return new Uint8Array(b)})}
+function encodeCode(st){
+ var bytes=new TextEncoder().encode(JSON.stringify(pack(st)));
+ if(typeof CompressionStream!=='undefined')return pipe(bytes,CompressionStream).then(function(b){return 'ENS1.'+b64u(b)},function(){return 'ENS0.'+b64u(bytes)});
+ return Promise.resolve('ENS0.'+b64u(bytes));
+}
+function decodeCode(code){
+ var m=/^ENS([01])\.([A-Za-z0-9_-]+)$/.exec(String(code).trim());if(!m)return Promise.reject(new Error('f'));
+ var bytes=unb64u(m[2]),p=m[1]==='1'?pipe(bytes,DecompressionStream):Promise.resolve(bytes);
+ return p.then(function(b){return unpack(JSON.parse(new TextDecoder().decode(b)))});
+}
+function summ(p){
+ var keep=S;
+ try{S=clean(p.s);var f=calc();return cat()[1]+' · DPS '+fmt(f.dpsT)+' · DPM '+fmt(f.dpsT*60)}catch(e){return ''}finally{S=keep}
+}
+function renderPresets(){
+ $('plist').innerHTML=PL.length?PL.map(function(p){
+  var cur=p.id===S.cur;
+  return '<div class="pr'+(cur?' cur':'')+'" data-pid="'+p.id+'"><div class="pn"><b>'+esc(p.name)+'</b><span class="pid">'+p.id+'</span>'+(cur?'<span class="tagc">편집 중</span>':'')+'</div><div class="ps">'+esc(summ(p))+'</div>'+
+   '<div class="pb"><label class="cmpl"><input type="checkbox" data-cmp="'+p.id+'"'+(cmpSel.indexOf(p.id)>=0?' checked':'')+'> 비교</label><button data-a="load">불러오기</button><button data-a="over">현재 세팅으로 덮어쓰기</button><button data-a="share">공유 코드</button><button data-a="del">'+(delId===p.id?'정말 삭제?':'삭제')+'</button></div></div>';
+ }).join(''):'<p class="empty">저장된 세팅이 없어요. 위에 이름을 입력하고 저장해보세요.</p>';
+ renderCmp();
+}
+function showShare(c){
+ $('shareBox').style.display='';$('shDet').open=true;var o=$('shareOut');o.value=c;o.focus();o.select();
+ try{navigator.clipboard.writeText(c).then(function(){setMsg('공유 코드를 복사했어요. 디스코드에 붙여넣으세요.')},function(){setMsg('아래 공유 코드를 직접 복사하세요.')})}catch(e){setMsg('아래 공유 코드를 직접 복사하세요.')}
+}
+function metr(st,live){
+ var keep=S;
+ try{
+  if(!live)S=clean(st);
+  var f=calc(),c=cat(),g=gem(),pg=f.gem?f.gem.total:0;
+  return {dpsT:f.dpsT,dpm:f.dpsT*60,dps:f.dps,gdps:f.gdps,exp:f.exp,hit:f.hit,crit:f.crit,cc:f.cc,cd:f.cd,raw:f.raw,mul:f.mul,t:f.t,pg:pg,hg:f.hit+pg,
+   info:c[1]+(f.sp?' ('+f.sp.n+')':'')+' · '+(g?g[1]:'보석 없음')};
+ }finally{S=keep}
+}
+var CROWS=[['DPS','dpsT',1],['DPM (1분당 데미지)','dpm',1],['기본 공격·주문 DPS','dps',1],['보석 DPS 기여','gdps',1],['기대 데미지 (1회)','exp',1],['1타 (치명타 제외)','hit',1],['치명타 1타','crit',1],
+ ['치명타 확률','cc',1,'pp'],['치명타 추가 피해','cd',1,'pp'],['합산 기본 데미지·주문 위력','raw',1],['배율 합계','mul',1,'x'],['보석 발동 1회 추가 데미지','pg',1],['1타 + 보석 1회 발동','hg',1],['공격 간격·충전 시간(초)','t',0,'t']];
+function cfmt(v,k){return k==='pp'?r1(v)+'%':k==='x'?'×'+(Math.round(v*1000)/1000):k==='t'?fmt2(v):fmt(v)}
+function renderCmp(){
+ var cols=[];
+ PL.forEach(function(p){if(cmpSel.indexOf(p.id)>=0)cols.push({k:p.id,n:p.name,id:p.id,m:metr(p.s,false)})});
+ if($('cmpCur').checked)cols.unshift({k:'cur',n:'현재 화면',id:'저장 전',m:metr(null,true)});
+ var out=$('cmpOut');
+ if(cols.length<2){out.innerHTML='';$('cmpHint').textContent='비교할 세팅을 2개 이상 체크하세요. 현재 화면도 포함할 수 있어요.';return}
+ $('cmpHint').textContent='기준 열과의 차이를 함께 보여줘요. 굵은 값이 항목별 최고값이에요.';
+ if(!cols.some(function(c){return c.k===cmpBase}))cmpBase=cols[0].k;
+ var base=cols.filter(function(c){return c.k===cmpBase})[0].m;
+ var h='<table class="cmp"><thead><tr><th></th>'+cols.map(function(c){
+  return '<th>'+esc(c.n)+'<span class="dl">'+esc(c.id)+'</span><span class="dl">'+esc(c.m.info)+'</span><label class="rb"><input type="radio" name="cmpb" data-base="'+c.k+'"'+(c.k===cmpBase?' checked':'')+'> 기준</label></th>';
+ }).join('')+'</tr></thead><tbody>';
+ CROWS.forEach(function(r){
+  var vals=cols.map(function(c){return c.m[r[1]]}),mx=Math.max.apply(null,vals),mn=Math.min.apply(null,vals);
+  h+='<tr><td>'+r[0]+'</td>'+cols.map(function(c){
+   var v=c.m[r[1]],bv=base[r[1]],d=v-bv,dl='';
+   if(c.m!==base&&Math.abs(d)>1e-9){
+    var cl=r[2]?(d>0?'up':'down'):'';
+    var pc=r[3]==='pp'||r[3]==='t'||r[3]==='x'?'':(bv>0?' ('+pct(d/bv*100)+')':'');
+    dl='<span class="dl"><span class="'+cl+'">'+(d>0?'+':'')+(r[3]==='pp'?r1(d)+'%p':r[3]==='x'?(Math.round(d*1000)/1000):r[3]==='t'?fmt2(d):fmt(d))+pc+'</span></span>';
+   }
+   var best=r[2]&&mx>mn&&v===mx?' class="best"':'';
+   return '<td'+best+'>'+cfmt(v,r[3])+dl+'</td>';
+  }).join('')+'</tr>';
+ });
+ out.innerHTML=h+'</tbody></table>';
+}
+function openModal(){lastFocus=document.activeElement;$('modal').hidden=false;document.documentElement.style.overflow='hidden';renderPresets();$('pname').focus()}
+function closeModal(){$('modal').hidden=true;document.documentElement.style.overflow='';if(lastFocus&&lastFocus.focus)lastFocus.focus()}
 function bind(){
  var one=CATS.filter(function(c){return c[2]===1}),two=CATS.filter(function(c){return c[2]===2});
  function og(l,a){return '<optgroup label="'+l+'">'+a.map(function(c){return '<option value="'+c[0]+'">'+c[1]+'</option>'}).join('')+'</optgroup>'}
@@ -453,7 +627,55 @@ function bind(){
  $('spell').addEventListener('change',function(){S.spell=this.value;update()});
  $('bowSpd').addEventListener('change',function(){S.bowSpd=+this.value;update()});
  $('baseEl').addEventListener('change',function(){S.baseEl=this.value;update()});
- $('addSk').addEventListener('click',function(){var k=SKILLS.filter(skScope)[0];if(!k)return;S.skills.push({id:uid++,sk:k[0],lv:1,v:k[3]});renderSkills();update()});
+ $('psave').addEventListener('click',function(){
+  if(PL.length>=50){setMsg('저장은 최대 50개까지 가능해요. 안 쓰는 세팅을 삭제해주세요.');return}
+  var nm=($('pname').value.trim()||('세팅 '+(PL.length+1))).slice(0,30);
+  var p={id:newId(),name:nm,t:Date.now(),s:snap()};PL.push(p);S.cur=p.id;savePL();$('pname').value='';renderPresets();update();setMsg('“'+nm+'” 저장 완료 · ID '+p.id);
+ });
+ $('plist').addEventListener('click',function(e){
+  var b=e.target.closest('button');if(!b||!b.dataset.a)return;
+  var row=b.closest('.pr'),p=PL.filter(function(x){return x.id===row.dataset.pid})[0];if(!p)return;
+  var a=b.dataset.a;
+  if(a==='del'){
+   if(delId===p.id){PL=PL.filter(function(x){return x!==p});cmpSel=cmpSel.filter(function(x){return x!==p.id});if(S.cur===p.id)S.cur='';delId='';savePL();renderPresets();update();setMsg('삭제했어요.')}
+   else{delId=p.id;renderPresets()}
+   return;
+  }
+  delId='';
+  if(a==='load'){applyState(clean(p.s),p.id);setMsg('');closeModal()}
+  else if(a==='over'){p.s=snap();p.t=Date.now();S.cur=p.id;savePL();renderPresets();update();setMsg('“'+p.name+'”에 현재 세팅을 덮어썼어요.')}
+  else if(a==='share'){renderPresets();encodeCode(p.s).then(showShare)}
+ });
+ $('openP').addEventListener('click',openModal);
+ $('mclose').addEventListener('click',closeModal);
+ $('modal').addEventListener('click',function(e){if(e.target.dataset&&e.target.dataset.close)closeModal()});
+ document.addEventListener('keydown',function(e){
+  if($('modal').hidden)return;
+  if(e.key==='Escape'){closeModal();return}
+  if(e.key==='Tab'){
+   var l=Array.prototype.filter.call($('modal').querySelectorAll('button,input,select,summary'),function(x){return x.offsetParent!==null&&!x.disabled});
+   if(!l.length)return;var f=l[0],z=l[l.length-1];
+   if(e.shiftKey&&document.activeElement===f){e.preventDefault();z.focus()}
+   else if(!e.shiftKey&&document.activeElement===z){e.preventDefault();f.focus()}
+  }
+ });
+ $('plist').addEventListener('change',function(e){
+  var id=e.target.dataset&&e.target.dataset.cmp;if(!id)return;
+  cmpSel=cmpSel.filter(function(x){return x!==id});if(e.target.checked)cmpSel.push(id);renderCmp();
+ });
+ $('cmpCur').addEventListener('change',renderCmp);
+ $('cmpOut').addEventListener('change',function(e){var k=e.target.dataset&&e.target.dataset.base;if(k){cmpBase=k;renderCmp()}});
+ $('pimp').addEventListener('click',function(){
+  var v=$('impIn').value.trim();if(!v)return;
+  if(v.length===10&&v.indexOf('.')<0){
+   var p=PL.filter(function(x){return x.id===v.toUpperCase()})[0];
+   if(p){applyState(clean(p.s),p.id);setMsg('');closeModal()}
+   else setMsg('이 브라우저에 저장된 세팅 중에 없는 ID예요. 다른 사람의 세팅은 ENS로 시작하는 공유 코드로 받아야 해요.');
+   return;
+  }
+  decodeCode(v).then(function(o){applyState(clean(o),'');$('pname').value='가져온 세팅';$('impIn').value='';setMsg('세팅을 불러왔어요. 저장하려면 이름을 정하고 저장 버튼을 누르세요.')}).catch(function(){setMsg('코드를 읽지 못했어요. ENS로 시작하는 코드를 전체 복사했는지 확인해주세요.')});
+ });
+ $('addSk').addEventListener('click',function(){var k=SKILLS.filter(function(x){return skScope(x)})[0];if(!k)return;S.skills.push({id:uid++,sk:k[0],lv:1,v:k[3]});renderSkills();update()});
  var sb=$('sk');
  function fs(e){var row=e.target.closest('.row');if(!row)return null;var id=+row.dataset.id;return S.skills.filter(function(r){return r.id===id})[0]||null}
  sb.addEventListener('input',function(e){var r=fs(e);if(r&&e.target.dataset.f==='v'){r.v=+e.target.value||0;update()}});
@@ -462,7 +684,7 @@ function bind(){
   else if(f==='lv'){r.lv=+e.target.value;r.v=skill(r.sk)[3]*r.lv;renderSkills();update()}});
  sb.addEventListener('click',function(e){if(!e.target.dataset.del)return;var r=fs(e);if(!r)return;S.skills=S.skills.filter(function(x){return x!==r});renderSkills();update()});
  $('addEnh').addEventListener('click',function(){S.rows.push({id:uid++,e:cat()[0]==='staff'?'mag':'cut',v:10});renderRows()});
- $('reset').addEventListener('click',function(){S=def();syncInputs();renderGemList();renderTip();renderRows()});
+ $('reset').addEventListener('click',function(){S=def();syncInputs();renderGemList();renderTip();renderRows();renderPresets()});
  $('glist').addEventListener('click',function(e){var b=e.target.closest('button');if(!b)return;S.gem=b.dataset.g;renderGemList();renderTip();update()});
  $('tip').addEventListener('input',function(e){
   var gx=e.target.dataset.gx;if(gx&&S.gem){var ox=S.gx[S.gem]||(S.gx[S.gem]={});ox[gx]=e.target.value===''?'':(+e.target.value||0);update();return}
@@ -477,7 +699,7 @@ function bind(){
 }
 load();
 S.rows.concat(S.skills||[]).forEach(function(r){if(r.id>=uid)uid=r.id+1});
-bind();syncInputs();renderGemList();renderTip();renderRows();
+bind();loadPL();syncInputs();renderGemList();renderTip();renderRows();renderPresets();
 })();
 </script>
 </body>
