@@ -3,12 +3,12 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>엔슈라우디드 깡데미지 계산기</title>
+<title>인슈라오디드 무기고</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap">
 <style>
-:root{--bg:#eef0f3;--surface:#fff;--ink:#1b1f27;--muted:#5d6573;--line:#d5d9e0;--accent:#5b4bd6;--accent-ink:#fff;--ember:#c2410c;--up:#17803d;--down:#b42318;--tip:#f6f4ff;color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#12141a;--surface:#1b1e26;--ink:#e8eaf0;--muted:#98a0ae;--line:#2d323d;--accent:#9a8cff;--accent-ink:#12141a;--ember:#ff9a5c;--up:#4ade80;--down:#f87171;--tip:#222036;color-scheme:dark}}
-:root[data-theme="dark"]{--bg:#12141a;--surface:#1b1e26;--ink:#e8eaf0;--muted:#98a0ae;--line:#2d323d;--accent:#9a8cff;--accent-ink:#12141a;--ember:#ff9a5c;--up:#4ade80;--down:#f87171;--tip:#222036;color-scheme:dark}
+:root{--bg:#eef0f3;--surface:#fff;--ink:#1b1f27;--muted:#5d6573;--line:#d5d9e0;--accent:#5b4bd6;--accent-ink:#fff;--ember:#c2410c;--up:#17803d;--down:#b42318;--tip:#f6f4ff;--uniq:#0e7490;color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#12141a;--surface:#1b1e26;--ink:#e8eaf0;--muted:#98a0ae;--line:#2d323d;--accent:#9a8cff;--accent-ink:#12141a;--ember:#ff9a5c;--up:#4ade80;--down:#f87171;--tip:#222036;--uniq:#22d3ee;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#12141a;--surface:#1b1e26;--ink:#e8eaf0;--muted:#98a0ae;--line:#2d323d;--accent:#9a8cff;--accent-ink:#12141a;--ember:#ff9a5c;--up:#4ade80;--down:#f87171;--tip:#222036;--uniq:#22d3ee;color-scheme:dark}
 html{scroll-padding-top:env(safe-area-inset-top,0px)}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.55 "Noto Sans KR",system-ui,-apple-system,"Apple SD Gothic Neo","Malgun Gothic",sans-serif}
@@ -94,6 +94,11 @@ button:hover{border-color:var(--accent)}
 .frow.off{opacity:.5}
 .frow label{margin:0;font-size:14px;color:var(--ink)}
 .frow .d{grid-column:1 / -1;font-size:12.5px;color:var(--muted)}
+.rec{display:inline-block;color:#ffd60a;background:#1b1f27;font-weight:700;border-radius:4px;padding:0 6px;margin-left:6px;font-size:12.5px;line-height:1.5;white-space:nowrap}
+.uq{color:var(--uniq);font-weight:500;font-size:12px;margin-left:4px;white-space:nowrap}
+.gbtn.uniq{border-left:3px solid var(--uniq);border-radius:0 6px 6px 0}
+.gbtn[aria-pressed=true] .uq{color:var(--accent-ink)}
+.gleg{font-size:12.5px;color:var(--muted);margin:0 0 8px}
 .chk{display:flex;align-items:center;gap:6px;font-size:14px;color:var(--ink);margin:6px 0}
 .row.sk{grid-template-columns:minmax(0,1fr) 70px 100px auto}
 @media (max-width:640px){.row.sk{grid-template-columns:1fr 70px}.row.sk .vwrap{grid-column:1 / 2}}
@@ -101,7 +106,7 @@ button:hover{border-color:var(--accent)}
 </head>
 <body>
 <div class="wrap">
-<h1>엔슈라우디드 깡데미지 계산기</h1>
+<h1>인슈라오디드 무기고</h1>
 <p class="sub">무기 종류와 강화 효과, 보석을 고르면 적 방어력을 뺀 순수 데미지가 몇인지 계산해요. 항목마다 그 항목이 데미지를 얼마나 올리는지도 바로 보여줘요.</p>
 
 <div class="grid">
@@ -148,6 +153,8 @@ button:hover{border-color:var(--accent)}
 
   <div class="panel">
     <h2>4. 보석 (무기당 1개)</h2>
+    <div class="gleg"><span class="rec" style="margin:0">★추천</span> 현재 세팅과 맞는 보석 · <span class="uq" style="margin:0">(고유)</span> 특수 조건에서 발동하는 고유 효과 보석</div>
+    <div class="note" id="gemRec" style="margin:0 0 10px"></div>
     <div class="gemwrap">
       <div class="glist" id="glist" role="group" aria-label="보석 목록"></div>
       <div class="tip" id="tip"></div>
@@ -307,7 +314,14 @@ var GM={bleeding:{m:'crit'},burning:{m:'hit'},corruption:{m:'hit',stk:1},current
  aerobatics:{m:'ev'},agility:{m:'ev'},bloodlust:{m:'ev'},'cold-composure':{m:'ev'},fracturing:{m:'ev'},'meteoric-impact':{m:'ev'},retaliation:{m:'ev'},'toxic-betrayal':{m:'ev'}};
 var GCD={burning:[2],'storms-eye':[2],corruption:[1]};
 GEMS.forEach(function(g){g[4]=Object.assign({},g[4]||{},GM[g[0]]||{});(GCD[g[0]]||[]).forEach(function(i){g[3][i]=['cd','초']})});
-var TS='이 특수 화살은 ';
+/* 보석 추천 태그: [연동 태그들, 고유 효과 여부]. 고유=특수 조건(공중·회피·표식·소환·구슬 등)에서 발동하는 효과 */
+var GT={aerobatics:[['pierce'],1],agility:[['cut'],0],armoring:[[],1],'battle-mania':[[],1],bleeding:[['cut','crit'],0],bloodlust:[['cut'],0],burning:[['fire'],0],cleansing:[[],1],
+ 'cold-composure':[['ice'],1],corruption:[['shroud'],1],currents:[['shock'],0],destiny:[[],1],'focused-light':[['fire'],0],fracturing:[['blunt'],1],'greater-necromancy':[[],1],
+ 'hopeful-embers':[[],1],hyperspecialization:[[],1],'lesser-necromancy':[[],1],lycanthropy:[[],1],'meteoric-impact':[['fire'],1],overpowering:[[],1],puncturing:[['pierce'],0],
+ retaliation:[['blunt'],0],skulls:[[],1],'soul-reaping':[[],1],'storms-eye':[['shock'],1],swiftness:[['cut'],0],'toxic-betrayal':[['poison'],0]};
+var ARROWT={'p-copper':'poison','p-bronze':'poison','p-iron':'poison','p-steel':'poison','p-goldsteel':'poison','p-celestium':'poison',blunt:'blunt','eternal-frost':'ice','eternal-ember':'fire','eternal-voltaic':'shock',shroud:'shroud'};
+var TN={cut:'절단',blunt:'타격',pierce:'관통',fire:'화염',ice:'얼음',shock:'충격',poison:'독',shroud:'어둠의 장막',crit:'치명타'};
+var gemSig='';
 var ARROWS=[
 ['wood','나무 화살',''],['flint','부싯돌 화살',''],['scrap','고철 화살',''],['copper','구리 화살',''],['bronze','청동 화살',''],['iron','철 화살',''],['steel','강철 화살',''],['goldsteel','황금 강철 화살',''],['celestium','셀레스티움 화살',''],
 ['p-copper','독성 구리 화살',''],['p-bronze','청동 독화살',''],['p-iron','철 독화살',''],['p-steel','강철 독화살',''],['p-goldsteel','황금 강철 독화살',''],['p-celestium','셀레스티움 독화살',''],
@@ -473,8 +487,42 @@ function renderRows(){
  renderSkills();
  update();
 }
+function gt(g){var x=GT[g[0]];return x?{t:x[0],u:x[1]}:{t:[],u:1}}
+function tagCounts(){
+ var c={};function add(t){c[t]=(c[t]||0)+1}
+ var cs=cat()[0];
+ if(cs==='staff'){var sp=spell();if(sp.el&&sp.el!=='none')add(sp.el)}else if(S.baseEl&&S.baseEl!=='none')add(S.baseEl);
+ if(cs==='bow'&&ARROWT[S.arrow])add(ARROWT[S.arrow]);
+ S.rows.forEach(function(r){var e=en(r.e);if(!e)return;if(e[2]==='pctBase')add(r.e);else if(e[2]==='critChance'||e[2]==='critDmg')add('crit')});
+ S.skills.forEach(function(r){
+  var k=skill(r.sk);if(!k)return;
+  if(k[2]==='dmg'&&k[6])add(k[6]);else if(k[2]==='cc')add('crit');else if(k[2]==='cc2'){add('crit');add('crit')}
+  else if((k[2]==='poison'||k[2]==='pmul')&&S.poison&&cs==='dagger')add('poison');
+ });
+ return c;
+}
+function recInfo(){
+ var c=tagCounts(),R={},ids=[],why={};
+ Object.keys(c).forEach(function(k){if(c[k]>=2)R[k]=c[k]});
+ GEMS.forEach(function(g){var m=gt(g).t.filter(function(t){return R[t]});if(m.length){ids.push(g[0]);why[g[0]]=m}});
+ var cur=Object.keys(c).map(function(k){return TN[k]+' ×'+c[k]}).join(' · '),rk=Object.keys(R).map(function(k){return TN[k]});
+ return {c:c,R:R,ids:ids,why:why,txt:'태그 현황: '+(cur||'없음')+(rk.length?' → '+rk.join('·')+' 관련 보석을 추천해요':' → 같은 태그가 2개 이상이면 관련 보석을 추천해요')};
+}
+function recLine(g){
+ var ri=recInfo(),h='';
+ if(ri.why[g[0]])h+='<div><span class="rec" style="margin:0">★추천</span> '+ri.why[g[0]].map(function(k){return TN[k]+' 태그 ×'+ri.c[k]}).join(', ')+'</div>';
+ if(gt(g).u)h+='<div class="tag">고유 효과 보석 · 피해 종류 강화가 아니라 특수 조건에서 발동하는 효과예요.</div>';
+ return h;
+}
+function refreshGemRec(){var ri=recInfo();$('gemRec').textContent=ri.txt;if(ri.ids.join(',')+'|'+S.gem!==gemSig)renderGemList()}
 function renderGemList(){
- $('glist').innerHTML='<button class="gbtn" data-g="" aria-pressed="'+(!S.gem)+'">보석 없음</button>'+GEMS.map(function(g){return '<button class="gbtn" data-g="'+g[0]+'" aria-pressed="'+(g[0]===S.gem)+'">'+g[1]+'</button>'}).join('');
+ var ri=recInfo(),gl=$('glist'),top=gl.scrollTop||0;
+ gemSig=ri.ids.join(',')+'|'+S.gem;
+ gl.innerHTML='<button class="gbtn" data-g="" aria-pressed="'+(!S.gem)+'">보석 없음</button>'+GEMS.map(function(g){
+  var u=gt(g).u,r=!!ri.why[g[0]];
+  return '<button class="gbtn'+(u?' uniq':'')+'" data-g="'+g[0]+'" aria-pressed="'+(g[0]===S.gem)+'">'+g[1]+(u?'<span class="uq">(고유)</span>':'')+(r?'<span class="rec">★추천</span>':'')+'</button>';
+ }).join('');
+ gl.scrollTop=top;
 }
 function renderTip(){
  var g=gem(),t=$('tip');
@@ -486,7 +534,7 @@ function renderTip(){
   var val=(v[+n]===undefined||v[+n]===''||v[+n]===0)?'':v[+n];
   return '<input class="q" type="number" step="0.1" min="0" data-gi="'+n+'" placeholder="?" value="'+val+'" aria-label="툴팁 ? 수치 '+(+n+1)+'">'+u;
  });
- t.innerHTML='<h3>'+g[1]+'</h3><div class="k">무기 보석'+(opt.trig==='crit'?' · 치명타 시 발동':'')+'</div><p>'+txt+'</p>'+gxHtml(g)+'<div class="gout" id="gout"></div>'+
+ t.innerHTML='<h3>'+g[1]+'</h3><div class="k">무기 보석 · '+(gt(g).u?'고유 효과':'일반')+(opt.trig==='crit'?' · 치명타 시 발동':'')+'</div><p>'+txt+'</p>'+gxHtml(g)+'<div class="gout" id="gout"></div>'+
   '<div class="tag" style="margin-top:8px">'+(opt.ko?'GameWith 한국어 툴팁 기준이에요.':'영문 위키 설명을 옮긴 문구라 게임 툴팁과 표현이 다를 수 있어요.')+(opt.note?' '+opt.note:'')+'</div>';
 }
 function skRowHtml(r){
@@ -568,7 +616,7 @@ function update(){
  });
  var go=$('gout');
  if(go&&g){
-  var h='',opt=g[4]||{},w=calc(null,true);
+  var h=recLine(g),opt=g[4]||{},w=calc(null,true);
   if(gc.direct){
    if(gc.total>0){
     h+='<div>발동 1회 추가 데미지 <span class="up">+'+fmt(gc.total)+'</span>'+(f.hit>0?' (1타의 '+pct(gc.total/f.hit*100)+')':'')+'</div>';
@@ -583,6 +631,7 @@ function update(){
   if(!gc.direct&&!g[3].some(function(x){return x[0]==='atk'}))h+='<div class="tag">직접 데미지 수치가 없는 효과라 계산에는 반영되지 않아요.</div>';
   go.innerHTML=h;
  }
+ refreshGemRec();
  save();
 }
 function renderFood(){
