@@ -88,6 +88,12 @@ button:hover{border-color:var(--accent)}
 .cmp td.best{font-weight:700}
 .cmp .dl{display:block;font-size:12px;color:var(--muted);font-weight:400}
 .cmp .rb{display:block;font-size:12px;color:var(--muted);font-weight:400;margin:2px 0 0}
+.row .ex{grid-column:1 / -1;font-size:13px;color:var(--muted)}
+.row .ex input{width:90px;display:inline-block;margin-left:4px}
+.frow{display:grid;grid-template-columns:minmax(0,1fr) 120px;gap:2px 10px;align-items:center;margin-bottom:8px}
+.frow.off{opacity:.5}
+.frow label{margin:0;font-size:14px;color:var(--ink)}
+.frow .d{grid-column:1 / -1;font-size:12.5px;color:var(--muted)}
 .chk{display:flex;align-items:center;gap:6px;font-size:14px;color:var(--ink);margin:6px 0}
 .row.sk{grid-template-columns:minmax(0,1fr) 70px 100px auto}
 @media (max-width:640px){.row.sk{grid-template-columns:1fr 70px}.row.sk .vwrap{grid-column:1 / 2}}
@@ -113,6 +119,14 @@ button:hover{border-color:var(--accent)}
       <div id="spdBox"><label for="bowSpd">기본 공격 간격</label><select id="bowSpd" style="display:none"><option value="0.6">0.6초 (빠른 활)</option><option value="1">1.0초 (느린 활)</option></select><div id="spdTxt" class="badge" style="margin:0"></div></div>
     </div>
     <div id="spellBox" style="display:none;margin-top:12px"><label for="spell">주문 선택</label><select id="spell"></select><div class="spinfo" id="spInfo"></div></div>
+    <div id="arrowBox" style="display:none;margin-top:12px">
+      <div class="f" style="grid-template-columns:minmax(0,2fr) minmax(0,1fr)">
+        <div><label for="arrow">화살 선택</label><select id="arrow"></select></div>
+        <div><label for="arrowDmg">화살 데미지 (직접 입력)</label><input id="arrowDmg" type="number" min="0" step="0.1" placeholder="?"></div>
+      </div>
+      <div class="spinfo" id="arrowTip"></div>
+    </div>
+    <div id="poisonBox" style="display:none;margin-top:12px"><label class="chk"><input type="checkbox" id="poison"> 독 칼날 (독 칼날 퍽이 있는 단검)</label></div>
     <div id="badge" class="badge"></div>
     <div class="presets"><span>예시 불러오기</span><span id="pre"></span></div>
     <p class="note">기본 데미지는 강화 효과를 뺀 무기 자체의 위력을 넣어주세요. 종류를 고르면 한손/양손 배율과 공격 간격이 자동으로 정해져요. 지팡이는 무기 기본 데미지 대신 주문의 위력으로 계산해요.</p>
@@ -142,6 +156,12 @@ button:hover{border-color:var(--accent)}
   </div>
 
   <div class="panel">
+    <h2>5. 음식 효과</h2>
+    <div id="food"></div>
+    <p class="note">먹은 음식 버프의 수치를 직접 입력하세요. 현재 무기에 해당하는 항목만 계산에 들어가요(근접은 한손·양손·단검, 원거리는 활, 마법은 완드·지팡이). 적 종류별 항목은 그 적과 싸우는 상태를 가정해요. 피해 배율 증가는 다른 피해 증가와 합산하지 않고 마지막에 곱해요.</p>
+  </div>
+
+  <div class="panel">
     <h2>치명타 기본값</h2>
     <div class="f">
       <div><label for="cc">기본 치명타 확률 (%)</label><input id="cc" type="number" step="0.1"></div>
@@ -161,6 +181,7 @@ button:hover{border-color:var(--accent)}
   <div class="stats">
     <div class="stat"><b id="rDpm">0</b><span>DPM (1분당 데미지)</span></div>
     <div class="stat"><b id="rGd">0</b><span>보석 DPS 기여</span></div>
+    <div class="stat" id="rSbox" style="display:none"><b id="rSd">0</b><span>스킬 추가 DPS</span></div>
     <div class="stat"><b id="rExp">0</b><span id="rExpL">기대 깡데미지 (1회)</span></div>
     <div class="stat"><b id="rT">0</b><span id="rTL">공격 간격</span></div>
     <div class="stat" id="rAbox" style="display:none"><b id="rDpsA">0</b><span>지속 중 DPS</span></div>
@@ -173,6 +194,15 @@ button:hover{border-color:var(--accent)}
     <div class="stat"><b id="rMul">×1</b><span>배율 합계</span></div>
   </div>
   <div class="note" id="rMulD"></div>
+  <div id="ssBox" style="display:none;margin-top:14px">
+   <div class="bigl">스킬샷 (헤드샷) · 모든 화살이 약점에 맞는다고 가정</div>
+   <div class="stats">
+    <div class="stat"><b id="rSs0">0</b><span id="rSs0L">투구 없음 · DPS</span></div>
+    <div class="stat"><b id="rSs0e">0</b><span>투구 없음 · 기대 데미지(1회)</span></div>
+    <div class="stat"><b id="rSs1">0</b><span id="rSs1L">투구 있음 · DPS</span></div>
+    <div class="stat"><b id="rSs1e">0</b><span>투구 있음 · 기대 데미지(1회)</span></div>
+   </div>
+  </div>
   <div class="stats">
     <div class="stat"><b id="rGem">0</b><span>보석 발동 1회 추가 데미지</span></div>
     <div class="stat"><b id="rHG">0</b><span>1타 + 보석 1회 발동</span></div>
@@ -277,8 +307,21 @@ var GM={bleeding:{m:'crit'},burning:{m:'hit'},corruption:{m:'hit',stk:1},current
  aerobatics:{m:'ev'},agility:{m:'ev'},bloodlust:{m:'ev'},'cold-composure':{m:'ev'},fracturing:{m:'ev'},'meteoric-impact':{m:'ev'},retaliation:{m:'ev'},'toxic-betrayal':{m:'ev'}};
 var GCD={burning:[2],'storms-eye':[2],corruption:[1]};
 GEMS.forEach(function(g){g[4]=Object.assign({},g[4]||{},GM[g[0]]||{});(GCD[g[0]]||[]).forEach(function(i){g[3][i]=['cd','초']})});
+var TS='이 특수 화살은 ';
+var ARROWS=[
+['wood','나무 화살',''],['flint','부싯돌 화살',''],['scrap','고철 화살',''],['copper','구리 화살',''],['bronze','청동 화살',''],['iron','철 화살',''],['steel','강철 화살',''],['goldsteel','황금 강철 화살',''],['celestium','셀레스티움 화살',''],
+['p-copper','독성 구리 화살',''],['p-bronze','청동 독화살',''],['p-iron','철 독화살',''],['p-steel','강철 독화살',''],['p-goldsteel','황금 강철 독화살',''],['p-celestium','셀레스티움 독화살',''],
+['bone','뼈 화살',''],['fossil','화석 뼈 화살',''],['giantbone','거인 뼈 화살',''],['eternal-giantbone','영원한 거인 뼈 화살',''],['blunt','뭉툭한 화살',''],
+['stun','기절 화살','이 특수 화살은 적은 피해를 주지만, 강력한 힘으로 적을 강타해 기절 막대를 올려 쉽게 제압할 수 있도록 돕습니다. 기절 막대 증가량은 민첩성에 비례하여 증가합니다. 기절 지속 시간은 적의 덩치에 따라 달라집니다. 제압 방어하는 적을 공격하거나 적의 공격을 패리하면 기절 막대가 차올라 적을 제압할 수 있습니다. 제압된 적에게는 무자비한 공격을 할 수 있습니다.'],
+['flare','섬광 화살','이 특수 화살은 접촉한 자리에 광원을 남겨 주변을 은은하게 비출 수 있습니다.'],
+['explosive','폭발 화살','강력한 폭발력을 지닌 특수 화살입니다.'],
+['shroud','어둠의 장막 화살','어둠의 장막의 힘을 지닌 이 특수 화살은 접촉한 자리에 장막 구름을 살포합니다.'],
+['eternal-frost','영원한 서리 화살',''],['eternal-ember','영원한 잉걸불 화살',''],['eternal-voltaic','영원한 전류 화살',''],['moonstone','월장석 화살',''],['obsidian','흑요석 화살','']
+].map(function(a){return {id:a[0],n:a[1],t:a[2]}});
+var FOODS=[['melee','근접 피해 증가','근접 무기'],['ranged','원거리 피해 증가','활'],['magic','마법 피해 증가','완드·지팡이'],['dagger','단검 피해 증가','단검'],['mult','피해 배율 증가','곱연산'],
+ ['drak','드라크 상대 피해량 증가','조건부'],['corrupt','타락자 상대 피해량 증가','조건부'],['hollow','텅 빈 상대 피해량 증가','조건부'],['beast','야생동물 상대 피해량 증가','조건부']];
 var KEY='enshrouded-calc-v2',uid=1;
-function def(){return {i:100,cat:'sword1',stat:'str',pts:0,cc:10,cd:80,rows:[],gem:'',gv:{},bowSpd:0.6,spell:'bf4',skills:[],gx:{},baseEl:'cut',cur:''}}
+function def(){return {i:100,cat:'sword1',stat:'str',pts:0,cc:10,cd:80,rows:[],gem:'',gv:{},bowSpd:0.6,spell:'bf4',skills:[],gx:{},baseEl:'cut',cur:'',food:{},poison:false,arrow:'',arrowDmg:0}}
 var S=def();
 function $(id){return document.getElementById(id)}
 function load(){try{var t=localStorage.getItem(KEY);if(t){var o=JSON.parse(t);if(o&&o.rows&&o.cat)S=Object.assign(def(),o)}}catch(e){}}
@@ -286,6 +329,8 @@ function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
 function cat(){return CATS.filter(function(c){return c[0]===S.cat})[0]||CATS[0]}
 function en(id){return EN.filter(function(e){return e[0]===id})[0]}
 function gem(){return GEMS.filter(function(g){return g[0]===S.gem})[0]||null}
+function arrow(){return ARROWS.filter(function(a){return a.id===S.arrow})[0]||null}
+function foodOk(k){var c=cat()[0];return k==='melee'?!!grpOf(c):k==='ranged'?c==='bow':k==='magic'?(c==='wand'||c==='staff'):k==='dagger'?c==='dagger':true}
 function spell(){return SP.filter(function(s){return s.id===S.spell})[0]||SP[0]}
 function fmt(x){return (Math.round(x*10)/10).toLocaleString('ko-KR')}
 function fmt2(x){return (Math.round(x*100)/100).toLocaleString('ko-KR')}
@@ -306,45 +351,52 @@ function gemCalc(raw){
 /* 스킬: [id,이름,종류,레벨당 수치,최대레벨,대상(무기id/그룹/A),속성,설명,분류,조건부] (GameWith 스킬 트리, 능력치 스킬 제외) */
 var M1=['M1','M2'];
 var SKILLS=[
-['titan-edge','거인의 날카로운 검','dmg',5,3,['gs2'],0,'양손 대검 피해 +5%/레벨','d'],
-['barbarians-path','야만인의 전투 방식','dmg',5,3,['axe2','hammer2'],0,'양손 도끼·곤봉·망치 피해 +5%/레벨','d'],
-['warriors-path','전사의 전투 방식','dmg',5,3,['sword1','axe1','club1'],0,'한손 도끼·곤봉·검 피해 +5%/레벨','d'],
-['brute','잔혹함','dmg',10,3,M1,'blunt','근접 둔기 피해 +10%/레벨','d'],
-['slasher','절단가','dmg',10,3,M1,'cut','근접 절단 피해 +10%/레벨','d'],
-['thrust','찌르기','dmg',10,3,M1,'pierce','근접 관통 피해 +10%/레벨','d'],
-['puncture','자상','dmg',10,3,['bow'],'pierce','원거리 관통 피해 +10%/레벨','d'],
-['dagger-mastery','단검 전문가','dmg',5,3,['dagger'],0,'단검 피해 +5%/레벨','d'],
-['marksman','명사수','dmg',5,3,['bow'],0,'활 피해 +5%/레벨','d'],
-['mage-apprentice','견습 마법사','dmg',5,3,['wand','staff'],0,'완드·지팡이 피해 +5%/레벨','d'],
-['wand-mastery','완드 전문가','dmg',5,3,['wand'],0,'완드 피해 +5%/레벨','d'],
-['spellslinger','주문술사','dmg',5,3,['staff'],0,'지팡이 피해 +5%/레벨','d'],
-['arsonist','화염 전문가','dmg',10,3,['A'],'fire','모든 화염 피해 +10%/레벨','d'],
-['iceman','얼음 술사','dmg',10,3,['A'],'ice','모든 얼음 피해 +10%/레벨','d'],
-['thunder','천둥','dmg',10,3,['A'],'shock','모든 충격 피해 +10%/레벨','d'],
-['dark-arts','흑마술','dmg',10,3,['A'],'shroud','모든 어둠의 장막 피해 +10%/레벨','d'],
-['veteran','정예병','cc',2,3,M1,0,'근접 무기 치명타 확률 +2%/레벨','c'],
-['sniper','저격수','cc',2,3,['bow'],0,'활 치명타 확률 +2%/레벨','c'],
-['wizard','대마법사','cc',2,3,['wand','staff'],0,'완드·지팡이 치명타 확률 +2%/레벨','c'],
-['fatal-precision','치명적인 정밀함','cc2',1,3,['A'],0,'치명타 확률 +1%, 치명타 피해 +5%/레벨 (치명타 피해는 곱연산으로 계산)','c'],
+['warriors-path','전사의 전투 방식','dmg',5,3,['sword1','axe1','club1'],0,'한 손 도끼, 곤봉, 검의 피해 (5%/10%/15%) 증가','d'],
+['barbarians-path','야만인의 전투 방식','dmg',5,3,['axe2','hammer2'],0,'양손 도끼, 곤봉, 망치의 피해 (5%/10%/15%) 증가','d'],
+['titan-edge','거인의 날카로운 검','dmg',5,3,['gs2'],0,'양손 대검 피해 (5%/10%/15%) 증가','d'],
+['slasher','절단가','dmg',10,3,M1,'cut','근접 절단 피해 (10%/20%/30%) 증가','d'],
+['brute','잔혹함','dmg',10,3,M1,'blunt','근접 둔기 피해 (10%/20%/30%) 증가','d'],
+['thrust','찌르기','dmg',10,3,M1,'pierce','근접 관통 피해 (10%/20%/30%) 증가','d'],
+['puncture','자상','dmg',10,3,['bow'],'pierce','원거리 관통 피해 (10%/20%/30%) 증가','d'],
+['marksman','명사수','dmg',5,3,['bow'],0,'활로 주는 피해 (5%/10%/15%) 증가','d'],
+['dagger-mastery','단검 전문가','dmg',5,3,['dagger'],0,'단검 피해 (5%/10%/15%) 증가','d'],
+['spellslinger','주문술사','dmg',5,3,['staff'],0,'지팡이 피해 (5%/10%/15%) 증가','d'],
+['mage-apprentice','견습 마법사','dmg',5,3,['wand','staff'],0,'완드와 지팡이 피해 (5%/10%/15%) 증가','d'],
+['wand-mastery','완드 전문가','dmg',5,3,['wand'],0,'완드 피해 (5%/10%/15%) 증가','d'],
+['iceman','얼음 술사','dmg',10,3,['A'],'ice','얼음 피해 (10%/20%/30%) 증가','d'],
+['arsonist','화염 전문가','dmg',10,3,['A'],'fire','화염 피해 (10%/20%/30%) 증가','d'],
+['thunder','천둥','dmg',10,3,['A'],'shock','충격 피해 (10%/20%/30%) 증가','d'],
+['dark-arts','흑마술','dmg',10,3,['A'],'shroud','어둠의 장막 피해 (10%/20%/30%) 증가','d'],
+['arcane-proliferation','불가사의한 증식','proj',30,1,['wand'],0,'완드 공격 시 30% 확률로 발사체 두 배. 추가 생성 발사체는 50% 감소된 피해 적용','d'],
+['radiant-aura','빛의 오라','aura',1,3,['wand','staff'],0,'(2/4/6)미터 내의 모든 적은 초마다 지능당 (1/2/3)의 화염 피해','d'],
+['veteran','정예병','cc',2,3,M1,0,'한손 또는 양손 도끼, 곤봉, 망치, 검, 대검, 단검의 치명타 확률 (2%/4%/6%) 증가','c'],
+['sniper','저격수','cc',2,3,['bow'],0,'활의 치명타 확률 (2%/4%/6%) 증가','c'],
+['wizard','대마법사','cc',2,3,['wand','staff'],0,'완드와 지팡이 치명타 확률 (2%/4%/6%) 증가','c'],
+['fatal-precision','치명적인 정밀함','cc2',1,3,['A'],0,'치명타 확률 (1%/2%/3%) 증가 및 치명타 피해 (5%/10%/15%) 증가 (치명타 피해는 곱연산으로 계산)','c'],
+['heavy-hitter','강타자','spd',10,1,['M2'],0,'모든 양손 근접 무기의 공격 속도 10% 증가','s'],
+['swift-blades','스위프트 블레이드','spd',15,1,['M1'],0,'모든 한손 근접 무기의 공격 속도 15% 증가','s'],
 ['relentless','냉혹함','cc',8,1,['M2'],0,'양손 무기로 치명타를 가하면 다음 공격의 치명타 확률 +8%','c',1],
-['heavy-hitter','강타자','spd',10,1,['M2'],0,'양손 근접 무기 공격 속도 +10%','s'],
-['swift-blades','스위프트 블레이드','spd',15,1,['M1'],0,'한손 근접 무기 공격 속도 +15%','s'],
-['quick-charge','빠른 충전','chg',10,3,['staff'],0,'주문 충전 시간 -10%/레벨','s'],
-['blood-rage','핏빛 격노','dmg',15,1,M1,0,'5m 내 적을 처치하면 10초 동안 근접 피해 +15%','x',1],
+['quick-charge','빠른 충전','chg',10,3,['staff'],0,'주문 충전 시간 (10%/20%/30%) 감소','s'],
 ['breach','돌파','dmg',100,1,M1,0,'제압된 적이 3초 동안 근접 물리 피해 +100% 더 받음','x',1],
-['expose-weakness','약점 노출','dmg',25,1,['A'],0,'단검 치명타 후 5초 동안 적이 물리 피해 +25% 더 받음','x',1],
-['slice-and-dice','산산조각','dmg',50,1,['bow'],0,'단검 치명타 후 10초 내 다음 활 공격 기본 피해 +50%','x',1],
-['blast-and-cast','시전과 폭발','dmg',50,1,['staff'],0,'완드 치명타 후 10초 내 다음 지팡이 공격 기본 피해 +50%','x',1],
-['eagles-bane','독수리의 베인','dmg',10,3,['A'],0,'비행 중인 적에게 피해 +10%/레벨','x',1],
-['counter-battery','반격의 화살','dmg',8,3,['A'],0,'원거리 적에게 피해 +8%/레벨','x',1],
-['shrapnel-blast','파편 폭발','dmg',10,1,['bow'],0,'폭발 화살에 맞은 대상 하나당 피해 +10%','x',1],
-['skill-shot','정확한 샷','dmg',20,3,['bow'],0,'스킬샷 피해 +20%/레벨','x',1],
-['backstab-mastery','능숙한 백스탭','dmg',20,3,['M1'],0,'배후 공격 피해 +20%/레벨','x',1],
-['sting','매서움','dmg',20,1,['wand'],0,'반복적인 완드 피해 +20%','x',1],
-['bone-to-ash','뼈를 재로','dmg',5,3,['A'],0,'텅 빈 적에게 피해 +5%/레벨','x',1],
-['primal-force','원시의 힘','dmg',5,3,['A'],0,'부카에게 피해 +5%/레벨','x',1],
-['cull-the-herd','무리 도태','dmg',5,3,['A'],0,'야생 동물에게 피해 +5%/레벨','x',1]
+['backstab-mastery','능숙한 백스탭','dmg',20,3,['M1'],0,'배후 공격 피해 (20%/40%/60%) 증가','x',1],
+['blood-rage','핏빛 격노','dmg',15,1,M1,0,'5미터 내의 적이 근접 무기로 처치되면 10초 동안 근접 무기 피해 15% 증가','x',1],
+['expose-weakness','약점 노출','dmg',25,1,['A'],0,'단검 치명타 후 5초 동안 25% 증가된 물리 피해','x',1],
+['slice-and-dice','산산조각','dmg',50,1,['bow'],0,'단검으로 치명타를 가한 후, 10초 내의 다음 활 공격의 기본 피해 50% 증가','x',1],
+['blast-and-cast','시전과 폭발','dmg',50,1,['staff'],0,'완드로 치명타 후, 10초 내의 다음 지팡이 공격 피해 50% 증가','x',1],
+['eagles-bane','독수리의 베인','dmg',10,3,['A'],0,'비행 중인 적에 대한 피해 (10%/20%/30%) 증가','x',1],
+['counter-battery','반격의 화살','dmg',8,3,['A'],0,'원거리 적에 대한 피해 (8%/16%/24%) 증가','x',1],
+['shrapnel-blast','파편 폭발','dmg',10,1,['bow'],0,'폭발 화살에 맞은 대상 하나당 피해 10% 증가','x',1],
+['skill-shot','정확한 샷','ss',20,3,['bow'],0,'스킬샷 피해 (20%/40%/60%) 증가 (스킬샷 지표에만 반영)','x',1],
+['sting','매서움','dmg',20,1,['wand'],0,'반복 공격시 완드 피해 20% 증가','x',1],
+['bone-to-ash','뼈를 재로','dmg',5,3,['A'],0,'텅 빈에 대한 피해 (5%/10%/15%) 증가','x',1],
+['primal-force','원시의 힘','dmg',5,3,['A'],0,'부카에 대한 피해 (5%/10%/15%) 증가','x',1],
+['cull-the-herd','무리 도태','dmg',5,3,['A'],0,'야생 동물에 대한 피해 (5%/10%/15%) 증가','x',1],
+['chain-hit','연쇄 명중','cproc',5,1,['wand','staff'],0,'마법 무기로 치명타 가하면 지능당 5의 충격 피해 (능력치 포인트 입력 수치 적용)','x',1],
+['venomous-blades','독 칼날','poison',30,1,['dagger'],0,'독 칼날 퍽이 있는 단검 사용 시 적을 중독시킬 확률 30% 증가 (중독 1회 피해는 직접 입력)','x',1],
+['venom-mastery','독 전문가','pmul',100,1,['dagger'],0,'독 칼날 단검 특전(스킬)으로 주는 피해 100% 증가 (독 칼날과 함께 사용)','x',1],
+['vile-concoction','사악한 혼합물','dmg',12,3,['throw'],0,'투척 피해 (12%/24%/36%) 증가','x',1]
 ];
+function SKU(k){return k==='cproc'?'/지능':k==='aura'?'/지능·초':'%'}
 var SKG={d:'상시 피해 증가',c:'치명타',s:'공격·충전 속도',x:'조건부 피해 증가'};
 function skill(id){return SKILLS.filter(function(k){return k[0]===id})[0]}
 function grpOf(c){return ['sword1','axe1','club1','dagger'].indexOf(c)>=0?'M1':['gs2','axe2','hammer2'].indexOf(c)>=0?'M2':''}
@@ -359,31 +411,46 @@ function gemDps(o,g,hr,cc){
  var flat=(o.dmg+o.pct/100*o.raw)*o.cnt;
  return {dps:flat*lam+(o.dur>0&&o.dps>0?o.dps*(1-Math.exp(-lam*o.dur)):0),lam:lam};
 }
-function calc(skipId,noGem){
- var c=cat(),st=c[0]==='staff',sp=st?spell():null;
- var pb=0,mg=0,cc=+S.cc||0,cd=+S.cd||0,I0=+S.i||0,elA={};
+function calc(skipId,noGem,skipFood){
+ var c=cat(),st=c[0]==='staff',sp=st?spell():null,bow=c[0]==='bow';
+ var pb=0,mg=0,cc=+S.cc||0,cd=+S.cd||0,I0=+S.i||0,elA={},elP={},AD=bow?(+S.arrowDmg||0):0;
  S.rows.forEach(function(r){
   if(r.id===skipId)return;var e=en(r.e);if(!e)return;var v=+r.v||0;
   if(e[2]==='pctBase'){pb+=v/100*I0;elA[r.e]=(elA[r.e]||0)+v/100*I0}else if(e[2]==='magDmg')mg+=v;else if(e[2]==='critChance')cc+=v;else if(e[2]==='critDmg')cd+=v;
  });
  if(sp){cc+=sp.cc;mg+=sp.dm}
- var raw=st?sp.p:I0+pb;
- if(st)elA[sp.el]=(elA[sp.el]||0)+sp.p;else if(S.baseEl!=='none')elA[S.baseEl]=(elA[S.baseEl]||0)+I0;
- var sk={dmg:0,cdm:0,spd:0,chg:0};
+ var raw=st?sp.p:I0+pb+AD;
+ if(st)elA[sp.el]=(elA[sp.el]||0)+sp.p;else if(S.baseEl!=='none')elA[S.baseEl]=(elA[S.baseEl]||0)+I0+AD;
+ var sk={dmg:0,cdm:0,spd:0,chg:0,ss:0,cp:0,au:0,pj:0,pc:0,px:0,pm:0};
  S.skills.forEach(function(r){
-  if(r.id===skipId)return;var k=skill(r.sk);if(!k)return;var v=+r.v||0;
-  if(k[2]==='dmg'){if(k[6])sk.dmg+=raw>0?v*(elA[k[6]]||0)/raw:0;else sk.dmg+=v}
-  else if(k[2]==='cc')cc+=v;else if(k[2]==='cc2'){cc+=v;sk.cdm+=v*5}else if(k[2]==='spd')sk.spd+=v;else if(k[2]==='chg')sk.chg+=v;
+  if(r.id===skipId)return;var k=skill(r.sk);if(!k)return;var v=+r.v||0,kd=k[2];
+  if(k[0]==='shrapnel-blast'&&S.arrow!=='explosive')return;
+  if((kd==='poison'||kd==='pmul')&&!(S.poison&&c[0]==='dagger'))return;
+  if(kd==='dmg'){if(k[6]){sk.dmg+=raw>0?v*(elA[k[6]]||0)/raw:0;elP[k[6]]=(elP[k[6]]||0)+v}else sk.dmg+=v}
+  else if(kd==='cc')cc+=v;else if(kd==='cc2'){cc+=v;sk.cdm+=v*5}else if(kd==='spd')sk.spd+=v;else if(kd==='chg')sk.chg+=v;
+  else if(kd==='ss')sk.ss+=v;else if(kd==='cproc')sk.cp+=v;else if(kd==='aura')sk.au+=v;else if(kd==='proj')sk.pj+=v;
+  else if(kd==='poison'){sk.pc+=v;sk.px+=(+r.x||0)}else if(kd==='pmul')sk.pm+=v;
  });
+ var fa=0,fm=0,F=S.food||{};
+ FOODS.forEach(function(fd){var k=fd[0];if(k===skipFood||!foodOk(k))return;var v=+F[k]||0;if(k==='mult')fm+=v;else fa+=v});
  cd=cd*(1+sk.cdm/100);
  var g2=gemCalc(raw),g=noGem?null:g2,atk=g?g.atk:0;
  var sm=S.stat==='none'?1:1+0.05*(+S.pts||0),tw=(c[2]===2&&!st)?1.5:1;
- var mul=sm*(1+(atk+mg+sk.dmg)/100)*tw,hit=raw*mul;cc=Math.max(0,Math.min(100,cc));
- var exp=hit*(1+cc/100*cd/100),t,dps,dA=0,cyc=0,mps=0;
- if(st){t=Math.max(0.1,sp.c*(1-Math.min(90,sp.ct+sk.chg)/100));cyc=sp.d>0?t+sp.d:t;dps=exp/cyc;dA=sp.d>0?exp/sp.d:0;mps=sp.m*(1-sp.mc/100)/cyc}
- else{t=(c[4]==='sel'?+S.bowSpd:c[4])/(1+sk.spd/100);cyc=t;dps=t>0?exp/t:0}
+ var mul=sm*(1+(atk+mg+sk.dmg+fa)/100)*tw*(1+fm/100),hit=raw*mul;cc=Math.max(0,Math.min(100,cc));
+ var INT=+S.pts||0,projM=1+sk.pj/100*0.5;
+ var exp=hit*(1+cc/100*cd/100)*projM;
+ var sx=cc/100*sk.cp*INT*(1+(elP.shock||0)/100)+(sk.pc/100)*sk.px*(1+sk.pm/100);
+ var ad=sk.au*INT*(1+(elP.fire||0)/100);
+ var t,dps,sdps,dA=0,cyc=0,mps=0;
+ if(st){t=Math.max(0.1,sp.c*(1-Math.min(90,sp.ct+sk.chg)/100));cyc=sp.d>0?t+sp.d:t;dps=exp/cyc;sdps=sx/cyc+ad;dA=sp.d>0?exp/sp.d:0;mps=sp.m*(1-sp.mc/100)/cyc}
+ else{t=(c[4]==='sel'?+S.bowSpd:c[4])/(1+sk.spd/100);cyc=t;dps=t>0?exp/t:0;sdps=(t>0?sx/t:0)+ad}
  var gr=g?gemDps(g,gem(),cyc>0?1/cyc:0,cc):{dps:0,lam:0};
- return {raw:raw,mul:mul,sm:sm,tw:tw,atk:atk+mg+sk.dmg,spd:sk.spd,hit:hit,crit:hit*(1+cd/100),exp:exp,cc:cc,cd:cd,t:t,cyc:cyc,dps:dps,gdps:gr.dps,lam:gr.lam,dpsT:dps+gr.dps,dA:dA,mps:mps,st:st,sp:sp,gem:g2,elA:elA};
+ var ss0=null,ss1=null,b0=100+sk.ss,b1=50+sk.ss;
+ if(bow){
+  ss0={e:exp*(1+b0/100),d:(t>0?exp*(1+b0/100)/t:0)+gr.dps};
+  ss1={e:exp*(1+b1/100),d:(t>0?exp*(1+b1/100)/t:0)+gr.dps};
+ }
+ return {raw:raw,mul:mul,sm:sm,tw:tw,fm:fm,atk:atk+mg+sk.dmg+fa,spd:sk.spd,hit:hit,crit:hit*(1+cd/100),exp:exp,cc:cc,cd:cd,t:t,cyc:cyc,dps:dps,sdps:sdps,gdps:gr.dps,lam:gr.lam,dpsT:dps+sdps+gr.dps,dA:dA,mps:mps,st:st,sp:sp,gem:g2,elA:elA,ss0:ss0,ss1:ss1,ssB0:b0,ssB1:b1,projM:projM};
 }
 function gxHtml(g){
  var o=g[4]||{},x=S.gx[g[0]]||{};
@@ -429,7 +496,7 @@ function skRowHtml(r){
  }).join('');
  var lv='';for(var i=1;i<=k[4];i++)lv+='<option value="'+i+'"'+(i===r.lv?' selected':'')+'>Lv '+i+'</option>';
  return '<div class="row sk" data-id="'+r.id+'"><select data-f="sk" aria-label="스킬">'+opts+'</select><select data-f="lv" aria-label="레벨">'+lv+'</select>'+
-  '<div class="vwrap"><input type="number" step="0.1" data-f="v" value="'+r.v+'" aria-label="수치"><span>%</span></div><button data-del="1" aria-label="삭제">삭제</button><div class="d" id="d'+r.id+'"></div></div>';
+  '<div class="vwrap"><input type="number" step="0.1" data-f="v" value="'+r.v+'" aria-label="수치"><span>'+SKU(k[2])+'</span></div><button data-del="1" aria-label="삭제">삭제</button>'+(k[2]==='poison'?'<div class="ex">중독 1회 피해 <input type="number" min="0" step="0.1" data-f="x" placeholder="?" value="'+(r.x||'')+'" aria-label="중독 1회 피해"></div>':'')+'<div class="d" id="d'+r.id+'"></div></div>';
 }
 function renderSkills(){
  $('sk').innerHTML=S.skills.length?S.skills.map(skRowHtml).join(''):'<p class="empty">추가된 스킬 효과가 없어요. 배운 스킬을 하나씩 추가하세요.</p>';
@@ -437,6 +504,18 @@ function renderSkills(){
 function update(){
  var f=calc(),c=cat(),g=gem(),gc=f.gem,st=f.st,sp=f.sp;
  var cpp=S.cur&&PL.filter(function(x){return x.id===S.cur})[0];$('rCur').textContent=cpp?'세팅: '+cpp.name+' ('+cpp.id+')':'';
+ var isBow=c[0]==='bow';
+ $('arrowBox').style.display=isBow?'':'none';$('poisonBox').style.display=c[0]==='dagger'?'':'none';
+ if(isBow){var ar=arrow();$('arrowTip').textContent=ar?(ar.t||'아직 추가효과 툴팁을 옮겨 적지 않은 화살이에요.'):'화살을 고르면 추가효과 툴팁이 여기에 표시돼요.'}
+ FOODS.forEach(function(fd){
+  var k=fd[0],v=+S.food[k]||0,ok=foodOk(k),row=$('fr_'+k),d=$('fd_'+k);
+  if(row)row.className='frow'+(ok?'':' off');
+  if(!d)return;
+  if(!ok){d.textContent='현재 무기에는 적용되지 않아요.';return}
+  if(!v){d.textContent='';return}
+  var w=calc(null,false,k),dE=f.exp-w.exp,dD=f.dpsT-w.dpsT;
+  d.innerHTML='기대 데미지 <span class="up">+'+fmt(dE)+' ('+pct(w.exp>0?dE/w.exp*100:0)+')</span> · DPS <span class="up">+'+fmt(dD)+'</span>';
+ });
  $('baseBox').style.display=st?'none':'';
  $('elBox').style.display=st?'none':'';
  $('spellBox').style.display=st?'':'none';
@@ -448,7 +527,10 @@ function update(){
  $('rDpsL').textContent=st?'깡 DPS (주문 + 보석)':'깡 DPS (기본 공격 + 보석)';
  $('rDps').textContent=fmt(f.dpsT);
  $('rDpsD').textContent=st?(sp.d>0?'사이클 = 충전 '+fmt2(f.t)+'초 + 지속 '+sp.d+'초':'충전 '+fmt2(f.t)+'초마다 1회'):'공격 간격 '+fmt2(f.t)+'초 → 초당 '+fmt2(1/f.t)+'회';
- $('rDpsB').textContent='기본 '+fmt(f.dps)+' + 보석 '+fmt(f.gdps);
+ $('rDpsB').textContent='기본 '+fmt(f.dps)+(f.sdps>0?' + 스킬 '+fmt(f.sdps):'')+' + 보석 '+fmt(f.gdps);
+ $('rSbox').style.display=f.sdps>0?'':'none';$('rSd').textContent=fmt(f.sdps);
+ $('ssBox').style.display=f.ss0?'':'none';
+ if(f.ss0){$('rSs0').textContent=fmt(f.ss0.d);$('rSs0e').textContent=fmt(f.ss0.e);$('rSs1').textContent=fmt(f.ss1.d);$('rSs1e').textContent=fmt(f.ss1.e);$('rSs0L').textContent='투구 없음 · DPS (+'+f.ssB0+'%)';$('rSs1L').textContent='투구 있음 · DPS (+'+f.ssB1+'%)'}
  $('rDpm').textContent=fmt(f.dpsT*60);$('rGd').textContent=fmt(f.gdps);
  $('rExpL').textContent=st?'주문 1회 기대 데미지':'기대 깡데미지 (1회)';
  $('rTL').textContent=st?'충전 시간 (감소 반영)':'공격 간격';
@@ -459,7 +541,7 @@ function update(){
  $('rExp').textContent=fmt(f.exp);$('rHit').textContent=fmt(f.hit);$('rCrit').textContent=fmt(f.crit);
  $('rCc').textContent=r1(f.cc)+'%';$('rCd').textContent='+'+r1(f.cd)+'%';$('rRaw').textContent=fmt(f.raw);
  $('rMul').textContent='×'+(Math.round(f.mul*1000)/1000);
- $('rMulD').textContent='능력치 ×'+(Math.round(f.sm*1000)/1000)+' · 공격/마법 피해 '+(f.atk?'+'+r1(f.atk)+'%':'없음')+' · '+(st?'주문은 양손 배율 없음':c[2]===2?'양손 ×1.5':'한손 ×1');
+ $('rMulD').textContent='능력치 ×'+(Math.round(f.sm*1000)/1000)+' · 공격/마법 피해 '+(f.atk?'+'+r1(f.atk)+'%':'없음')+' · '+(st?'주문은 양손 배율 없음':c[2]===2?'양손 ×1.5':'한손 ×1')+(f.fm?' · 피해 배율 +'+r1(f.fm)+'%':'');
  var pg=gc?gc.total:0;$('rGem').textContent=fmt(pg);$('rHG').textContent=fmt(f.hit+pg);
  var b=$('badge');b.className='badge'+(c[2]===2&&!st?' two':'');
  b.textContent=st?'지팡이 · 주문 위력 기준 (양손 ×1.5는 주문에 적용하지 않아요)':c[2]===2?'양손 무기 · 데미지 ×1.5 자동 적용':'한손 무기 · 양손 배율 ×1.5는 적용되지 않아요';
@@ -470,8 +552,19 @@ function update(){
  S.rows.forEach(function(r){eff($('d'+r.id),r.id,'이 항목 효과: ')});
  S.skills.forEach(function(r){
   var k=skill(r.sk);if(!k)return;
+  var kd=k[2],v=+r.v||0,INT=+S.pts||0;
   var ex=k[7]+(k[9]?' [조건부]':'')+(k[6]&&f.raw>0?' · 해당 속성 비율 '+r1((f.elA[k[6]]||0)/f.raw*100)+'%':'')+'<br>';
-  eff($('d'+r.id),r.id,ex);
+  if(kd==='cproc')ex+='치명타마다 지능 '+INT+' × '+v+' = '+fmt(INT*v)+' 충격 피해 · ';
+  else if(kd==='aura')ex+='지능 '+INT+' × '+v+' = 초당 '+fmt(INT*v)+' 화염 피해 · ';
+  else if(kd==='proj')ex+='기대 피해 ×'+fmt2(1+v/100*0.5)+' · ';
+  else if(kd==='poison'&&!r.x)ex+='중독 1회 피해를 입력해야 DPS에 반영돼요. ';
+  else if(kd==='pmul'&&!S.skills.some(function(q){return q.sk==='venomous-blades'}))ex+='독 칼날 스킬과 함께 추가해야 효과가 있어요. ';
+  if(k[0]==='shrapnel-blast'&&S.arrow!=='explosive')ex+='폭발 화살을 선택해야 적용돼요. ';
+  if((kd==='poison'||kd==='pmul')&&!S.poison)ex+='독 칼날 체크박스를 켜야 적용돼요. ';
+  if(kd==='ss'){
+   var el=$('d'+r.id),w2=calc(r.id);
+   if(el&&f.ss0&&w2.ss0)el.innerHTML=ex+'스킬샷 보너스 투구 없음 +'+f.ssB0+'% · 투구 있음 +'+f.ssB1+'% → 스킬샷 DPS <span class="up">+'+fmt(f.ss0.d-w2.ss0.d)+'</span> / <span class="up">+'+fmt(f.ss1.d-w2.ss1.d)+'</span>';
+  }else eff($('d'+r.id),r.id,ex);
  });
  var go=$('gout');
  if(go&&g){
@@ -492,9 +585,16 @@ function update(){
  }
  save();
 }
+function renderFood(){
+ $('food').innerHTML=FOODS.map(function(fd){
+  var v=+S.food[fd[0]]||0;
+  return '<div class="frow" id="fr_'+fd[0]+'"><label for="fi_'+fd[0]+'">'+fd[1]+' <span class="tag">('+fd[2]+')</span></label><div class="vwrap"><input id="fi_'+fd[0]+'" type="number" min="0" step="0.1" data-food="'+fd[0]+'" value="'+(v||'')+'" placeholder="0"><span>%</span></div><div class="d" id="fd_'+fd[0]+'"></div></div>';
+ }).join('');
+}
 function syncInputs(){
  $('cat').value=S.cat;$('intr').value=S.i;$('stat').value=S.stat;$('pts').value=S.pts;$('cc').value=S.cc;$('cd').value=S.cd;
  $('bowSpd').value=S.bowSpd;$('spell').value=S.spell;$('baseEl').value=S.baseEl;
+ $('arrow').value=S.arrow;$('arrowDmg').value=S.arrowDmg||'';$('poison').checked=!!S.poison;renderFood();
 }
 var PKEY='enshrouded-presets-v1',PL=[],delId='',cmpSel=[],cmpBase='',lastFocus=null;
 var AL='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
@@ -519,8 +619,10 @@ function clean(o){
  n.bowSpd=+o.bowSpd===1?1:0.6;n.spell=SP.some(function(x){return x.id===o.spell})?o.spell:'bf4';
  n.baseEl=['cut','blunt','pierce','none'].indexOf(o.baseEl)>=0?o.baseEl:BEL[n.cat];
  n.rows=(o.rows||[]).filter(function(r){return r&&en(r.e)}).map(function(r){return {id:uid++,e:r.e,v:+r.v||0}});
- n.skills=(o.skills||[]).filter(function(r){return r&&skill(r.sk)}).map(function(r){return {id:uid++,sk:r.sk,lv:Math.max(1,Math.min(skill(r.sk)[4],+r.lv||1)),v:+r.v||0}});
+ n.skills=(o.skills||[]).filter(function(r){return r&&skill(r.sk)}).map(function(r){return {id:uid++,sk:r.sk,lv:Math.max(1,Math.min(skill(r.sk)[4],+r.lv||1)),v:+r.v||0,x:+r.x||0}});
  n.gem=GEMS.some(function(g){return g[0]===o.gem})?o.gem:'';
+ n.poison=!!o.poison;n.arrow=ARROWS.some(function(a){return a.id===o.arrow})?o.arrow:'';n.arrowDmg=+o.arrowDmg||0;
+ FOODS.forEach(function(fd){n.food[fd[0]]=(o.food&&+o.food[fd[0]])||0});
  GEMS.forEach(function(g){
   var a=o.gv&&o.gv[g[0]];if(Array.isArray(a))n.gv[g[0]]=a.map(function(x){return +x||0});
   var x=o.gx&&o.gx[g[0]];
@@ -535,13 +637,15 @@ function applyState(n,cur){
  syncInputs();renderGemList();renderTip();renderRows();renderPresets();
 }
 function pack(s){return [1,s.cat,s.i,s.stat,s.pts,s.cc,s.cd,s.bowSpd,s.spell,s.baseEl,
- (s.rows||[]).map(function(r){return [r.e,r.v]}),(s.skills||[]).map(function(r){return [r.sk,r.lv,r.v]}),
- s.gem||'',(s.gv&&s.gv[s.gem])||[],(s.gx&&s.gx[s.gem])||{}]}
+ (s.rows||[]).map(function(r){return [r.e,r.v]}),(s.skills||[]).map(function(r){return [r.sk,r.lv,r.v,r.x||0]}),
+ s.gem||'',(s.gv&&s.gv[s.gem])||[],(s.gx&&s.gx[s.gem])||{},
+ FOODS.map(function(fd){return +((s.food||{})[fd[0]])||0}),s.poison?1:0,s.arrow||'',s.arrowDmg||0]}
 function unpack(a){
  if(!Array.isArray(a)||a[0]!==1)throw new Error('v');
  var o={cat:a[1],i:a[2],stat:a[3],pts:a[4],cc:a[5],cd:a[6],bowSpd:a[7],spell:a[8],baseEl:a[9],
-  rows:(a[10]||[]).map(function(r){return {e:r[0],v:r[1]}}),skills:(a[11]||[]).map(function(r){return {sk:r[0],lv:r[1],v:r[2]}}),gem:a[12],gv:{},gx:{}};
+  rows:(a[10]||[]).map(function(r){return {e:r[0],v:r[1]}}),skills:(a[11]||[]).map(function(r){return {sk:r[0],lv:r[1],v:r[2],x:r[3]}}),gem:a[12],gv:{},gx:{}};
  if(a[12]){o.gv[a[12]]=a[13];o.gx[a[12]]=a[14]}
+ o.food={};FOODS.forEach(function(fd,i){o.food[fd[0]]=a[15]&&a[15][i]});o.poison=a[16]===1;o.arrow=a[17];o.arrowDmg=a[18];
  return o;
 }
 function b64u(b){var t='';for(var i=0;i<b.length;i++)t+=String.fromCharCode(b[i]);return btoa(t).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'')}
@@ -578,11 +682,11 @@ function metr(st,live){
  try{
   if(!live)S=clean(st);
   var f=calc(),c=cat(),g=gem(),pg=f.gem?f.gem.total:0;
-  return {dpsT:f.dpsT,dpm:f.dpsT*60,dps:f.dps,gdps:f.gdps,exp:f.exp,hit:f.hit,crit:f.crit,cc:f.cc,cd:f.cd,raw:f.raw,mul:f.mul,t:f.t,pg:pg,hg:f.hit+pg,
+  return {dpsT:f.dpsT,dpm:f.dpsT*60,dps:f.dps,sdps:f.sdps,ss0:f.ss0?f.ss0.d:null,ss1:f.ss1?f.ss1.d:null,gdps:f.gdps,exp:f.exp,hit:f.hit,crit:f.crit,cc:f.cc,cd:f.cd,raw:f.raw,mul:f.mul,t:f.t,pg:pg,hg:f.hit+pg,
    info:c[1]+(f.sp?' ('+f.sp.n+')':'')+' · '+(g?g[1]:'보석 없음')};
  }finally{S=keep}
 }
-var CROWS=[['DPS','dpsT',1],['DPM (1분당 데미지)','dpm',1],['기본 공격·주문 DPS','dps',1],['보석 DPS 기여','gdps',1],['기대 데미지 (1회)','exp',1],['1타 (치명타 제외)','hit',1],['치명타 1타','crit',1],
+var CROWS=[['DPS','dpsT',1],['DPM (1분당 데미지)','dpm',1],['기본 공격·주문 DPS','dps',1],['보석 DPS 기여','gdps',1],['스킬 추가 DPS','sdps',1],['스킬샷 DPS (투구 없음)','ss0',1],['스킬샷 DPS (투구 있음)','ss1',1],['기대 데미지 (1회)','exp',1],['1타 (치명타 제외)','hit',1],['치명타 1타','crit',1],
  ['치명타 확률','cc',1,'pp'],['치명타 추가 피해','cd',1,'pp'],['합산 기본 데미지·주문 위력','raw',1],['배율 합계','mul',1,'x'],['보석 발동 1회 추가 데미지','pg',1],['1타 + 보석 1회 발동','hg',1],['공격 간격·충전 시간(초)','t',0,'t']];
 function cfmt(v,k){return k==='pp'?r1(v)+'%':k==='x'?'×'+(Math.round(v*1000)/1000):k==='t'?fmt2(v):fmt(v)}
 function renderCmp(){
@@ -598,10 +702,10 @@ function renderCmp(){
   return '<th>'+esc(c.n)+'<span class="dl">'+esc(c.id)+'</span><span class="dl">'+esc(c.m.info)+'</span><label class="rb"><input type="radio" name="cmpb" data-base="'+c.k+'"'+(c.k===cmpBase?' checked':'')+'> 기준</label></th>';
  }).join('')+'</tr></thead><tbody>';
  CROWS.forEach(function(r){
-  var vals=cols.map(function(c){return c.m[r[1]]}),mx=Math.max.apply(null,vals),mn=Math.min.apply(null,vals);
+  var vals=cols.map(function(c){return c.m[r[1]]}).filter(function(v){return v!=null}),mx=Math.max.apply(null,vals),mn=Math.min.apply(null,vals);
   h+='<tr><td>'+r[0]+'</td>'+cols.map(function(c){
-   var v=c.m[r[1]],bv=base[r[1]],d=v-bv,dl='';
-   if(c.m!==base&&Math.abs(d)>1e-9){
+   var v=c.m[r[1]];if(v==null)return '<td>–</td>';var bv=base[r[1]],d=v-bv,dl='';
+   if(c.m!==base&&bv!=null&&Math.abs(d)>1e-9){
     var cl=r[2]?(d>0?'up':'down'):'';
     var pc=r[3]==='pp'||r[3]==='t'||r[3]==='x'?'':(bv>0?' ('+pct(d/bv*100)+')':'');
     dl='<span class="dl"><span class="'+cl+'">'+(d>0?'+':'')+(r[3]==='pp'?r1(d)+'%p':r[3]==='x'?(Math.round(d*1000)/1000):r[3]==='t'?fmt2(d):fmt(d))+pc+'</span></span>';
@@ -619,14 +723,19 @@ function bind(){
  function og(l,a){return '<optgroup label="'+l+'">'+a.map(function(c){return '<option value="'+c[0]+'">'+c[1]+'</option>'}).join('')+'</optgroup>'}
  $('cat').innerHTML=og('한손 무기',one)+og('양손 무기 (×1.5)',two);
  $('pre').innerHTML=PRESETS.map(function(p,i){return '<button data-p="'+i+'">'+p[0]+'</button>'}).join(' ');
- $('pre').addEventListener('click',function(e){var b=e.target.closest('button');if(!b)return;var p=PRESETS[+b.dataset.p];S.cat=p[1];S.i=p[2];S.stat=cat()[3];S.baseEl=BEL[S.cat];S.rows=[];S.skills=[];syncInputs();renderRows()});
- $('cat').addEventListener('change',function(){S.cat=this.value;S.stat=cat()[3];S.baseEl=BEL[S.cat];S.rows=[];S.skills=[];syncInputs();renderRows()});
+ $('pre').addEventListener('click',function(e){var b=e.target.closest('button');if(!b)return;var p=PRESETS[+b.dataset.p];S.cat=p[1];S.i=p[2];S.stat=cat()[3];S.baseEl=BEL[S.cat];S.rows=[];S.skills=[];S.arrow='';S.arrowDmg=0;S.poison=false;syncInputs();renderRows()});
+ $('cat').addEventListener('change',function(){S.cat=this.value;S.stat=cat()[3];S.baseEl=BEL[S.cat];S.rows=[];S.skills=[];S.arrow='';S.arrowDmg=0;S.poison=false;syncInputs();renderRows()});
  [['intr','i'],['pts','pts'],['cc','cc'],['cd','cd']].forEach(function(m){$(m[0]).addEventListener('input',function(){S[m[1]]=+this.value||0;update()})});
  $('stat').addEventListener('change',function(){S.stat=this.value;update()});
  $('spell').innerHTML=SPG.map(function(g){return '<optgroup label="'+g[0]+'">'+g[1].map(function(x){return '<option value="'+x.id+'">'+x.n+'</option>'}).join('')+'</optgroup>'}).join('');
  $('spell').addEventListener('change',function(){S.spell=this.value;update()});
  $('bowSpd').addEventListener('change',function(){S.bowSpd=+this.value;update()});
  $('baseEl').addEventListener('change',function(){S.baseEl=this.value;update()});
+ $('arrow').innerHTML='<option value="">선택 안 함</option>'+ARROWS.map(function(a){return '<option value="'+a.id+'">'+a.n+'</option>'}).join('');
+ $('arrow').addEventListener('change',function(){S.arrow=this.value;update()});
+ $('arrowDmg').addEventListener('input',function(){S.arrowDmg=+this.value||0;update()});
+ $('poison').addEventListener('change',function(){S.poison=this.checked;update()});
+ $('food').addEventListener('input',function(e){var k=e.target.dataset&&e.target.dataset.food;if(!k)return;S.food[k]=+e.target.value||0;update()});
  $('psave').addEventListener('click',function(){
   if(PL.length>=50){setMsg('저장은 최대 50개까지 가능해요. 안 쓰는 세팅을 삭제해주세요.');return}
   var nm=($('pname').value.trim()||('세팅 '+(PL.length+1))).slice(0,30);
@@ -678,9 +787,9 @@ function bind(){
  $('addSk').addEventListener('click',function(){var k=SKILLS.filter(function(x){return skScope(x)})[0];if(!k)return;S.skills.push({id:uid++,sk:k[0],lv:1,v:k[3]});renderSkills();update()});
  var sb=$('sk');
  function fs(e){var row=e.target.closest('.row');if(!row)return null;var id=+row.dataset.id;return S.skills.filter(function(r){return r.id===id})[0]||null}
- sb.addEventListener('input',function(e){var r=fs(e);if(r&&e.target.dataset.f==='v'){r.v=+e.target.value||0;update()}});
+ sb.addEventListener('input',function(e){var r=fs(e),f=e.target.dataset.f;if(!r)return;if(f==='v'){r.v=+e.target.value||0;update()}else if(f==='x'){r.x=+e.target.value||0;update()}});
  sb.addEventListener('change',function(e){var r=fs(e),f=e.target.dataset.f;if(!r)return;
-  if(f==='sk'){r.sk=e.target.value;r.lv=1;r.v=skill(r.sk)[3];renderSkills();update()}
+  if(f==='sk'){r.sk=e.target.value;r.lv=1;r.v=skill(r.sk)[3];r.x=0;renderSkills();update()}
   else if(f==='lv'){r.lv=+e.target.value;r.v=skill(r.sk)[3]*r.lv;renderSkills();update()}});
  sb.addEventListener('click',function(e){if(!e.target.dataset.del)return;var r=fs(e);if(!r)return;S.skills=S.skills.filter(function(x){return x!==r});renderSkills();update()});
  $('addEnh').addEventListener('click',function(){S.rows.push({id:uid++,e:cat()[0]==='staff'?'mag':'cut',v:10});renderRows()});
@@ -697,7 +806,7 @@ function bind(){
  box.addEventListener('change',function(e){var r=find(e);if(r&&e.target.dataset.f==='e'){r.e=e.target.value;r.v=en(r.e)[3];renderRows()}});
  box.addEventListener('click',function(e){if(!e.target.dataset.del)return;var r=find(e);if(!r)return;S.rows=S.rows.filter(function(x){return x!==r});renderRows()});
 }
-load();
+load();S.skills=(S.skills||[]).filter(function(r){return skill(r.sk)});
 S.rows.concat(S.skills||[]).forEach(function(r){if(r.id>=uid)uid=r.id+1});
 bind();loadPL();syncInputs();renderGemList();renderTip();renderRows();renderPresets();
 })();
